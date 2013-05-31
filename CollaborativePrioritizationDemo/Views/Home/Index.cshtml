@@ -16,15 +16,28 @@
 			background-color: #DEDEDE;
 		}
 
+		.item:hover
+		{
+			background-color: #EFEFEF;
+		}
+
 		.item-header
 		{
-			background-color: #ababab;
+			background-color: #ABABAB;
+		}
+
+		.item-move
+		{
+			width: 30px;
+			float: right;
+			display: inline;
 		}
 
 		.item-name
 		{
 			width: 200px;
 			float: left;
+			display: inline;
 		}
 
 		.item-sortOrder
@@ -42,8 +55,6 @@
 
 		.sortableHandle
 		{
-			/*background-color: #ff0000;
-			width:3px;*/
 			cursor: move;
 		}
 	</style>
@@ -56,40 +67,31 @@
 }
 
 <div id="body">
-    <section class="featured">
-        <div class="content-wrapper">
-            <hgroup class="title">
-                <h1>Welcome to ASP.NET Web API!</h1>
-                <h2>Modify the code in this template to jump-start your ASP.NET Web API development.</h2>
-            </hgroup>
-            <p>
-                ASP.NET Web API allows you to expose your applications, data and services to the
-                web directly over HTTP.
-            </p>
-            <p>
-                To learn more about ASP.NET Web API visit the
-                <a href="http://go.microsoft.com/fwlink/?LinkID=238195" title="ASP.NET Web API Website">ASP.NET Web API Website</a>.
-                The page features <mark>videos, tutorials, and samples</mark> to help you get the most from ASP.NET Web API.
-                If you have any questions about ASP.NET Web API, visit
-                <a href="http://go.microsoft.com/fwlink/?LinkID=238196" title="ASP.NET Web API Forum">our forums</a>.
-            </p>
-        </div>
-    </section>
-
     <section class="content-wrapper main-content clear-fix">
-        <h3>We suggest the following steps:</h3>
+        <h3>Prioritized Items:</h3>
+
+		<p>
+			Click and drag the <span class="ui-icon ui-icon-carat-2-n-s" style="display: inline-block"></span> icon to re-order items.
+		</p>
 
 		<div class="item-header">
 			<div class="item-name"><strong>Item Name</strong></div>
 			<div class="item-sortOrder"><strong>Sort Order</strong></div>
+			<div class="item-move"><span class="ui-icon ui-icon-carat-2-n-s"></span></div>
 		</div>
 
 		<div class="item-list" data-bind="sortable: { data: items, afterMove: $root.afterMove, options: { start: sortableStart, helper: $root.fixHelper, handle: '.sortableHandle', cursor: 'move', placeholder: 'item-moving' } }">
 			<div class="item">
-				<div class="sortableHandle item-name"><span data-bind="text: name"></span></div>
-				<div class="sortableHandle item-sortOrder"><span data-bind="text: sortOrder"></span></div>
+				<div class="item-name"><span data-bind="text: name"></span></div>
+				<div class="item-sortOrder"><span data-bind="text: sortOrder"></span></div>
+				<div class="item-move sortableHandle"><span class="ui-icon ui-icon-carat-2-n-s"></span></div>
 			</div>
 		</div>
+
+		<p>
+			The "Sort Order" column represents the "sort order" number of an item used to keep the items ordered when saved to persistent storage, such as a database.  
+			It would normally not be displayed to the user.
+		</p>
     </section>
 </div>
 
@@ -100,7 +102,7 @@
 		var viewModel = new SortableItemsViewModel();
 		ko.applyBindings(viewModel);
 
-		var itemsHub = $.connection.itemsHub;
+		var itemsHub = $.connection.itemsHub; // Links to the ItemsHub hub class
 
 		// Create a function that the hub can call back to display messages.
 		itemsHub.client.updateItemSortOrder = function (id, sortOrder) {
