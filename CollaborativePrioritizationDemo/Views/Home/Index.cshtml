@@ -99,9 +99,11 @@
 
 	$(document).ready(function () {
 
+		// Setup our view model using KnockoutJS
 		var viewModel = new SortableItemsViewModel();
 		ko.applyBindings(viewModel);
 
+		// Initialize our connection to SignalR
 		var itemsHub = $.connection.itemsHub; // Links to the ItemsHub hub class
 
 		// Create a function that the hub can call back to display messages.
@@ -163,7 +165,8 @@
 		// Editable data
 		self.items = ko.observableArray([]);
 
-		// Return a helper with preserved width of cells
+		// Return a helper with preserved width of cells.
+		// Used when dragging rows in a table.
 		self.fixHelper = function (e, ui) {
 			ui.children().each(function () {
 				$(this).width($(this).width());
@@ -171,6 +174,8 @@
 			return ui;
 		};
 
+		// Ensures the height of the placeholder matches 
+		// the height of the item being dragged.
 		self.sortableStart = function (e, ui) {
 			ui.placeholder.height(ui.item.height());
 		};
@@ -184,13 +189,11 @@
 			var prevItem = null;
 			if (newIndex > 0) {
 				prevItem = items()[newIndex - 1];
-				//alert ('prev: ' + prevItem.sortOrder());
 			}
 
 			var nextItem = null;
 			if (newIndex < items().length - 1) {
 				nextItem = items()[newIndex + 1];
-				//alert('next: ' + nextItem.sortOrder());
 			}
 
 
