@@ -1,0 +1,184 @@
+﻿@section css
+{
+	<style type="text/css">
+		
+
+		.sortableHandle
+		{
+			/*background-color: #ff0000;
+			width:3px;*/
+			cursor: move;
+		}
+	</style>
+}
+
+@section scripts
+{
+	<script src="~/Scripts/jquery.signalR-1.0.0.js"></script>
+    <script src="~/signalr/hubs"></script>
+}
+
+<div id="body">
+    <section class="featured">
+        <div class="content-wrapper">
+            <hgroup class="title">
+                <h1>Welcome to ASP.NET Web API!</h1>
+                <h2>Modify the code in this template to jump-start your ASP.NET Web API development.</h2>
+            </hgroup>
+            <p>
+                ASP.NET Web API allows you to expose your applications, data and services to the
+                web directly over HTTP.
+            </p>
+            <p>
+                To learn more about ASP.NET Web API visit the
+                <a href="http://go.microsoft.com/fwlink/?LinkID=238195" title="ASP.NET Web API Website">ASP.NET Web API Website</a>.
+                The page features <mark>videos, tutorials, and samples</mark> to help you get the most from ASP.NET Web API.
+                If you have any questions about ASP.NET Web API, visit
+                <a href="http://go.microsoft.com/fwlink/?LinkID=238196" title="ASP.NET Web API Forum">our forums</a>.
+            </p>
+        </div>
+    </section>
+
+    <section class="content-wrapper main-content clear-fix">
+        <h3>We suggest the following steps:</h3>
+
+		<table class="itemTable" style="width:100%; border-spacing: 2px; border-collapse:separate;">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Sort Order</th>
+				</tr>
+			</thead>
+			 <tbody data-bind="sortable: { data: items, afterMove: $root.afterMove, options: { helper: $root.fixHelper, handle: '.sortableHandle', cursor: 'move' } }">
+				<tr class="item">
+					<td class="sortableHandle"><span data-bind="text: name"></span></td>
+					<td class="sortableHandle"><span data-bind="text: sortOrder"></span></td>
+				</tr>
+			</tbody>
+		</table>
+    </section>
+</div>
+
+<script type="text/javascript">
+
+	$(document).ready(function () {
+
+		var viewModel = new SortableItemsViewModel();
+		ko.applyBindings(viewModel);
+
+		var itemsHub = $.connection.itemsHub;
+
+		// Create a function that the hub can call back to display messages.
+		itemsHub.client.updateItemSortOrder = function (id, sortOrder) {
+
+			var items = viewModel.items();
+			for (var i = 0; i < items.length; ++i) {
+				var item = items[i];
+
+				if (item.id == id) {
+					// Remove this item from the list
+					viewModel.items.remove(item);
+
+					item.sortOrder(sortOrder);
+
+					// Find the new location
+					items = viewModel.items(); // Update our list
+					for (var j = 0; j < items.length; ++j) {
+						var item2 = items[j];
+
+						if (item2.sortOrder() >= sortOrder) {
+							viewModel.items.splice(j, 0, item);
+							return;
+						}
+					}
+
+					// Add to the end
+					viewModel.items.push(item);
+				}
+			}
+		};
+
+		$.connection.hub.start().done(function () {
+		});
+
+		$.getJSON('@Url.RouteUrl("DefaultApi", new { httproute = "", controller = "Items" })', function (data) {
+
+			// On success, 'data' contains a list of items.
+			$.each(data, function (i, value) {
+
+				var model = new SortableItem(value.id, value.name, value.sortOrder);
+				viewModel.items.push(model);
+
+			});
+		});
+	});
+
+	function SortableItem(id, name, sortOrder) {
+		var self = this;
+
+		self.id = id;
+		self.name = ko.observable(name);
+		self.sortOrder = ko.observable(sortOrder);
+	}
+
+	function SortableItemsViewModel() {
+		var self = this;
+
+		// Editable data
+		self.items = ko.observableArray([]);
+
+		//self.sortItems = function (l, r) {
+		//	var ls = l.sortOrder();
+		//	var rs = r.sortOrder();
+		//	if (ls > rs)
+		//		return 1;
+		//	else if (ls < rs)
+		//		return -1;
+		//}
+
+		// Return a helper with preserved width of cells
+		self.fixHelper = function (e, ui) {
+			ui.children().each(function () {
+				$(this).width($(this).width());
+			});
+			return ui;
+		};
+
+		self.afterMove = function (e) {
+			var item = e.item;
+			var items = e.targetParent;
+			var newIndex = e.targetIndex;
+
+			// Get the item that is now before the item
+			var prevItem = null;
+			if (newIndex > 0) {
+				prevItem = items()[newIndex - 1];
+				//alert ('prev: ' + prevItem.sortOrder());
+			}
+
+			var nextItem = null;
+			if (newIndex < items().length - 1) {
+				nextItem = items()[newIndex + 1];
+				//alert('next: ' + nextItem.sortOrder());
+			}
+
+
+			// Update the server
+			$.ajax({
+				url: '@Url.RouteUrl("DefaultApi", new { httproute = "", controller = "Items" })/' + item.id,
+				contentType: 'application/json',
+				type: 'put',
+				dataType: 'json',
+				data: JSON.stringify({ after: (prevItem != null ? prevItem.id : -1), before: (nextItem != null ? nextItem.id : -1) }),
+				success: function (data) {
+				},
+				error: function (data) {
+				}
+
+			});
+		}
+	}
+
+
+
+</script>
